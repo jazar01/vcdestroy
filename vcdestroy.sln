@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30406.217
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vcdestroy", "vcdestroy\vcdestroy.csproj", "{6329C9E3-B709-4946-B2B2-E950EAF8E66B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7607009C-DA5F-40E6-8BBA-A37D1424B512}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		All|Any CPU = All|Any CPU
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6329C9E3-B709-4946-B2B2-E950EAF8E66B}.All|Any CPU.ActiveCfg = Release|Any CPU
+		{6329C9E3-B709-4946-B2B2-E950EAF8E66B}.All|Any CPU.Build.0 = Release|Any CPU
+		{6329C9E3-B709-4946-B2B2-E950EAF8E66B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6329C9E3-B709-4946-B2B2-E950EAF8E66B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6329C9E3-B709-4946-B2B2-E950EAF8E66B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6329C9E3-B709-4946-B2B2-E950EAF8E66B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B1D7E1EE-D794-4861-8B56-4F36DCA5F7A5}
+	EndGlobalSection
+EndGlobal

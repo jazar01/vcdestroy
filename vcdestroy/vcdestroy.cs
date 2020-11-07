@@ -18,7 +18,7 @@ namespace vcdestroy
             {
                 new Option<int>(
                     aliases: new string[]{"--iterations", "-i" },
-                    getDefaultValue: () => 100000,
+                    getDefaultValue: () => 1000,
                     description: "Number of random bytes to place"),
 
                 new Option<bool>(

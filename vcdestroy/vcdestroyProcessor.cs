@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.ExceptionServices;
 
 namespace vcdestroy
 {
@@ -10,17 +11,17 @@ namespace vcdestroy
         /// </summary>
         /// <param name="iterations"></param>
         /// <param name="fileSpec"></param>
-        public vcdestroyProcessor(int iterations,  string fileSpec, bool nodelete)
+        public vcdestroyProcessor(int iterations,  string fileSpec, bool all, bool nodelete)
         {
             DateTime startTime = DateTime.Now;
 
-            wipe(fileSpec, iterations, nodelete);
+            wipe(fileSpec, iterations, all, nodelete);
 
             TimeSpan elapsedTime = DateTime.Now - startTime;
             Console.WriteLine("{0} Destroyed in {1:f1} Seconds", fileSpec,  elapsedTime.TotalSeconds);
         }
 
-        private void wipe(string filespec, int iterations, bool nodelete)
+        private void wipe(string filespec, int iterations, bool all, bool nodelete)
         {
             const int BUFFER_SIZE = 65536;
 
@@ -94,13 +95,14 @@ namespace vcdestroy
                 fs.Flush();
             }
 
-            // write random bytes to the start of each 1MB segment for the first 200MB
+            // write random bytes to the start of each 1MB segment for the first 50 GB
             //   this will wipe out the file system header of the hidden volume
             //   if the outer volume is a number of megabytes.
-            Console.WriteLine("Wiping first segment of each MB");
-            for (int i = 0; i < 200; i++)
+            Console.WriteLine("Wiping first segment of each MB of first 50 GB");
+            int j;
+            for (j = 0; j < 50000; j++)
             {
-                long position =  i *  1024 * 1024;
+                long position =  (long) j *  1024 * 1024;
                 if (position < File.Length)
                 {
                     fs.Seek(position, SeekOrigin.Begin);
@@ -109,20 +111,19 @@ namespace vcdestroy
                     fs.Write(buffer, 0, BytesToWrite);
                 }
                 else
-                {
-                    Console.WriteLine("-- Wiped {0} segments", i);
                     break;
-                }
-
             }
 
-            // write random bytes to the start of each 1GB segment for the first 200GB
+
+            Console.WriteLine("-- Wiped {0} segments", j);
+            // write random bytes to the start of each 1GB segment
             //   this will wipe out the file system header of the hidden volume
             //   if the outer volume is a number of gigabytes.
+
             Console.WriteLine("Wiping first segment of each GB");
-            for (int i = 0; i < 200; i++)
+            for (int i = 0; i < File.Length / 1024*1024*1024; i++)
             {
-                long position = i * 1024 * 1024 * 1024;
+                long position = (long) i * 1024 * 1024 * 1024;
                 if ( position < File.Length)
                 {
                     fs.Seek(position,SeekOrigin.Begin);
@@ -138,30 +139,59 @@ namespace vcdestroy
 
             }
 
-              
+
+
+
             // write random bytes to random locations throughout the rest of the file
-            //  If a hidden volume exists, we don't know where it start
+            //  If a hidden volume exists, we don't know where it starts
             //     The hidden volume cannot be mounted if the headers are wiped out,
             //        but if there is a backup header stored in an external file, it 
             //        could possibly used to access the hidden volume.  
-            if (File.Length > 2* BUFFER_SIZE)
+
+
+            if (iterations > 0 && (File.Length > 2* BUFFER_SIZE))  // don't bother doing this if the file is tiny, first and last segments were already wiped.
             {
-                Console.WriteLine("Writing random bytes in random locations");
-                while (iterations-- > 0)
+                // select and sort the positions in advance to improve IO performance
+                long[] positions = new long[iterations];
+                for (int n = 0; n < iterations; n++)
+                    positions[n] = (long)(rnd.NextDouble() * (File.Length - 2 * BUFFER_SIZE)) + BUFFER_SIZE;
+
+                Array.Sort(positions);
+
+                Console.WriteLine("Writing random bytes in {0} random locations", positions.Length);
+                for (int n = 0; n < positions.Length; n++)
                 {
-                    long location = (long) (rnd.NextDouble() * (File.Length - 2*BUFFER_SIZE)) + BUFFER_SIZE;
-                    fs.Seek(location, SeekOrigin.Begin);
+                    fs.Seek(positions[n], SeekOrigin.Begin);
                     int bytes = rnd.Next(4096, BUFFER_SIZE);
                     rnd.NextBytes(buffer);
                     fs.Write(buffer, 0, bytes);
                 }
             }
 
+            // If ALL, then write random bytes to entire file
+
+            if (all)
+                {
+                fs.Seek(0, SeekOrigin.Begin);
+                long bytesleft = File.Length;
+                Console.WriteLine("Writing random bytes over entire file");
+                while (bytesleft > 0)
+                    {
+                        rnd.NextBytes(buffer);
+                        fs.Write(buffer, 0, (int)Math.Min(BUFFER_SIZE, bytesleft));
+                        bytesleft -= BUFFER_SIZE;
+                    }
+            }
+
+
                 
                fs.Dispose();
 
             if (!nodelete)
-               File.Delete();
+            {
+                Console.WriteLine("Deleteing {0}", filespec);
+                File.Delete();
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.ExceptionServices;
+using ShellProgressBar;
 
 namespace vcdestroy
 {
@@ -24,6 +25,11 @@ namespace vcdestroy
         private void wipe(string filespec, int iterations, bool all, bool nodelete)
         {
             const int BUFFER_SIZE = 65536;
+            var options = new ProgressBarOptions
+            {
+                ProgressCharacter = '-',
+                ProgressBarOnBottom = true
+            };
 
             FileInfo File = new FileInfo(filespec);
             if (!File.Exists)
@@ -151,20 +157,25 @@ namespace vcdestroy
 
             if (iterations > 0 && (File.Length > 2* BUFFER_SIZE))  // don't bother doing this if the file is tiny, first and last segments were already wiped.
             {
+
+
                 // select and sort the positions in advance to improve IO performance
                 long[] positions = new long[iterations];
                 for (int n = 0; n < iterations; n++)
                     positions[n] = (long)(rnd.NextDouble() * (File.Length - 2 * BUFFER_SIZE)) + BUFFER_SIZE;
 
                 Array.Sort(positions);
+                string message = string.Format("Writing random bytes in {0} random locations", positions.Length);
+                var pbar = new ProgressBar(positions.Length, message, options);
 
-                Console.WriteLine("Writing random bytes in {0} random locations", positions.Length);
+                // Console.WriteLine("Writing random bytes in {0} random locations", positions.Length);
                 for (int n = 0; n < positions.Length; n++)
                 {
                     fs.Seek(positions[n], SeekOrigin.Begin);
                     int bytes = rnd.Next(4096, BUFFER_SIZE);
                     rnd.NextBytes(buffer);
                     fs.Write(buffer, 0, bytes);
+                    pbar.Tick();
                 }
             }
 
@@ -172,14 +183,17 @@ namespace vcdestroy
 
             if (all)
                 {
+                int totalTicks = (int) (File.Length / BUFFER_SIZE);
+                var pbar = new ProgressBar(totalTicks, "Writing random bytes over entire file", options);
+
                 fs.Seek(0, SeekOrigin.Begin);
                 long bytesleft = File.Length;
-                Console.WriteLine("Writing random bytes over entire file");
                 while (bytesleft > 0)
                     {
                         rnd.NextBytes(buffer);
                         fs.Write(buffer, 0, (int)Math.Min(BUFFER_SIZE, bytesleft));
                         bytesleft -= BUFFER_SIZE;
+                        pbar.Tick();
                     }
             }
 
@@ -192,6 +206,8 @@ namespace vcdestroy
                 Console.WriteLine("Deleteing {0}", filespec);
                 File.Delete();
             }
+
+            Console.WriteLine("\nOperation Complete");
         }
     }
 }
